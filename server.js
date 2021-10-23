@@ -4,6 +4,8 @@ const app = express();
 var cors = require('cors');
 
 const database = require('./lib/database');
+const vrs = require('./lib/vehicleRegistrationService');
+const validation = require('./lib/validation');
 
 app.use(cors()); // Don't do this in production :)
 
@@ -11,28 +13,28 @@ app.use(express.static(path.join(__dirname, 'build'))); // Serves build producti
 app.use(express.json());
 
 app.get('/vehicles', (req, res) => {
-  // TODO
-  res.json([]);
+  res.json(database.all());
 });
 
 app.get('/vehicles/:id', (req, res) => {
-  // TODO
-  res.json({});
+  res.json(database.find(req.params.id));
 });
 
-app.post('/vehicles', (req, res) => {
-  // TODO
-  res.json({});
+app.post('/vehicles', [validation.validateVehicleData], async (req, res) => {
+  var rec = database.create(req.body);
+  rec.regId = await vrs.registerVehicle(rec);
+  rec = database.update(rec.id, rec);
+  res.json(rec);
 });
 
-app.put('/vehicles/:id', (req, res) => {
-  // TODO
-  res.json({});
+app.put('/vehicles/:id', [validation.validateVehicleData], (req, res) => {
+  var rec = database.update(req.params.id, req.body);
+  res.json(rec);
 });
 
 app.delete('/vehicles/:id', (req, res) => {
-  // TODO
-  res.json({});
+  var rec = database.destroy(req.params.id);
+  res.json(rec);
 });
 
 // Serves build production files
